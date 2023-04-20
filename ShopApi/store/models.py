@@ -4,6 +4,9 @@ from account.models import Person, Address, Payment
 
 # Create your models here.
 
+
+
+
 class Category(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
@@ -22,6 +25,8 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+
 
 
 class Cart(models.Model):

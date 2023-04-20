@@ -178,17 +178,23 @@ class OrderView(generics.ListCreateAPIView):
         serializer = OrderSerializer(data=request.data)
         if serializer.is_valid():
 
+            # this is the cart of the user
             cart = serializer.validated_data['cart']
             cartItems = CartItem.objects.filter(cart=cart)
 
             cost = 0
             product_is_valid = False
 
+            # i am looping through the items in the cart
             for cartItem in cartItems:
 
                 if cartItem.product in products:
+                    # the cartitem is one of the cartitems in the cart
+                    # the item is the product that is in the cartitem
                     item = Product.objects.get(pk=cartItem.product.pk)
 
+
+                    # i am checking if the quantity of the cartitem that the user pass in is less than or equals to the product quantity
                     if cartItem.quantity <= item.quantity:
                         cost = cost + cartItem.cost
                         item.quantity = item.quantity - cartItem.quantity
@@ -204,8 +210,7 @@ class OrderView(generics.ListCreateAPIView):
                     #     product_is_valid = True
                     #     item.save()
 
-                else:
-                    cartItem.delete()
+
 
             if product_is_valid:
 
@@ -214,7 +219,7 @@ class OrderView(generics.ListCreateAPIView):
                 if cost <= payment.balance:
                     payment.balance -= cost
                     payment.save()
-                    transaction = Transaction(
+                    transactions = Transaction(
                         ref=payment.cardNumber,
                         amount=cost,
                         person=cart.person,
@@ -223,9 +228,9 @@ class OrderView(generics.ListCreateAPIView):
                         cart=cart,
                     )
 
-                    transaction.save()
-                serializer.validated_data['transaction'] = transaction
-                serializer.save()
+                    transactions.save()
+
+                serializer.save(transaction=transactions)
 
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
